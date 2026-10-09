@@ -1,0 +1,38 @@
+[
+  {
+    "id": "sig-001",
+    "timestamp": "2026-10-06T10:15:00Z",
+    "text": "Federal Reserve signals aggressive 50 bps rate hike amid stubborn inflation data",
+    "ticker": "BAC",
+    "sentiment_label": "negative",
+    "sentiment_score": -0.742,
+    "event_type": "Macroeconomic",
+    "event_confidence": 0.891,
+    "impact_score": 8,
+    "urgency_score": 0.85
+  },
+  {
+    "id": "sig-002",
+    "timestamp": "2026-10-06T09:30:00Z",
+    "text": "Middle East escalating geopolitical conflict disrupts key oil pipeline routes",
+    "ticker": "XOM",
+    "sentiment_label": "negative",
+    "sentiment_score": -0.812,
+    "event_type": "Geopolitical",
+    "event_confidence": 0.942,
+    "impact_score": 9,
+    "urgency_score": 0.9
+  },
+  {
+    "id": "sig-003",
+    "timestamp": "2026-10-06T08:45:00Z",
+    "text": "Microsoft reports record Azure cloud AI revenue growth surging 32% year-over-year",
+    "ticker": "MSFT",
+    "sentiment_label": "positive",
+    "sentiment_score": 0.925,
+    "event_type": "Earnings Report",
+    "event_confidence": 0.915,
+    "impact_score": 6,
+    "urgency_score": 0.6
+  }
+]

@@ -1,0 +1,77 @@
+[
+  {
+    "ticker": "AAPL",
+    "name": "Apple",
+    "weight": 0.1
+  },
+  {
+    "ticker": "MSFT",
+    "name": "Microsoft",
+    "weight": 0.1
+  },
+  {
+    "ticker": "GOOGL",
+    "name": "Google",
+    "weight": 0.08
+  },
+  {
+    "ticker": "AMZN",
+    "name": "Amazon",
+    "weight": 0.08
+  },
+  {
+    "ticker": "NVDA",
+    "name": "NVIDIA",
+    "weight": 0.08
+  },
+  {
+    "ticker": "META",
+    "name": "Meta",
+    "weight": 0.06
+  },
+  {
+    "ticker": "JPM",
+    "name": "JPMorgan Chase",
+    "weight": 0.06
+  },
+  {
+    "ticker": "JNJ",
+    "name": "Johnson & Johnson",
+    "weight": 0.06
+  },
+  {
+    "ticker": "V",
+    "name": "Visa",
+    "weight": 0.05
+  },
+  {
+    "ticker": "PG",
+    "name": "Procter & Gamble",
+    "weight": 0.05
+  },
+  {
+    "ticker": "XOM",
+    "name": "Exxon Mobil",
+    "weight": 0.05
+  },
+  {
+    "ticker": "BAC",
+    "name": "Bank of America",
+    "weight": 0.05
+  },
+  {
+    "ticker": "HD",
+    "name": "Home Depot",
+    "weight": 0.06
+  },
+  {
+    "ticker": "UNH",
+    "name": "UnitedHealth",
+    "weight": 0.06
+  },
+  {
+    "ticker": "MA",
+    "name": "Mastercard",
+    "weight": 0.06
+  }
+]

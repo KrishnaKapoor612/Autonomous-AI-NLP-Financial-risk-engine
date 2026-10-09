@@ -1,0 +1,90 @@
+[
+  {
+    "id": 1,
+    "name": "US Treasury 10Y Bond",
+    "type": "Government Bond",
+    "value": 10000000,
+    "rate": 0.025,
+    "sector": "Government",
+    "rating": "AAA"
+  },
+  {
+    "id": 2,
+    "name": "TechCorp Senior Bond",
+    "type": "Corporate Bond",
+    "value": 5000000,
+    "rate": 0.045,
+    "sector": "Technology",
+    "rating": "A"
+  },
+  {
+    "id": 3,
+    "name": "EnergyCo Bond",
+    "type": "Corporate Bond",
+    "value": 4000000,
+    "rate": 0.055,
+    "sector": "Energy",
+    "rating": "BBB"
+  },
+  {
+    "id": 4,
+    "name": "AAPL Equity Holding",
+    "type": "Equity",
+    "value": 3000000,
+    "sector": "Technology",
+    "rating": "N/A"
+  },
+  {
+    "id": 5,
+    "name": "JPM Equity Holding",
+    "type": "Equity",
+    "value": 2500000,
+    "sector": "Financials",
+    "rating": "N/A"
+  },
+  {
+    "id": 6,
+    "name": "XOM Equity Holding",
+    "type": "Equity",
+    "value": 2000000,
+    "sector": "Energy",
+    "rating": "N/A"
+  },
+  {
+    "id": 7,
+    "name": "RetailCo Term Loan",
+    "type": "Loan",
+    "value": 8000000,
+    "rate": 0.065,
+    "sector": "Consumer",
+    "rating": "BBB"
+  },
+  {
+    "id": 8,
+    "name": "MfgCorp Revolving Credit",
+    "type": "Loan",
+    "value": 5000000,
+    "rate": 0.055,
+    "sector": "Industrials",
+    "rating": "BB"
+  },
+  {
+    "id": 9,
+    "name": "IR Swap (Pay Fixed)",
+    "type": "Interest Rate Swap",
+    "notional": 20000000,
+    "value": 500000,
+    "fixed_rate": 0.035,
+    "sector": "Derivatives",
+    "rating": "N/A"
+  },
+  {
+    "id": 10,
+    "name": "Credit Default Swap",
+    "type": "Credit Default Swap",
+    "notional": 10000000,
+    "value": 300000,
+    "sector": "Derivatives",
+    "rating": "N/A"
+  }
+]
