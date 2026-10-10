@@ -3,8 +3,8 @@
 **Candidate Name:** Krishna Kapoor
 **College Email ID:**  kkapoor2_be24@thapar.edu
 **College / Campus:** Thapar Institute of Engineering and Technology 
-**Demo Video Link:** [YouTube / Unlisted]  
-**Slide Deck Link (if hosted externally):** [Slide Deck Link / docs/presentation.pdf]  
+**Demo Video Link:** [\[YouTube / Unlisted\]  ](https://youtu.be/9eZeS-aQFG4)
+**Slide Deck Link (within the repo in docs folder):**  [Presentation Slide Deck (docs/presentation.pdf)](docs/presentation.pdf)
 
 ---
 
@@ -152,8 +152,8 @@ flowchart TB
 
 ```bash
 # 1. Clone the repository
-git clone <your-repo-url>
-cd <repo-folder>
+git clone https://github.com/KrishnaKapoor612/Autonomous-AI-NLP-Financial-risk-engine
+cd Autonomous-AI-NLP-Financial-risk-engine
 
 # 2. Create and activate a virtual environment
 python -m venv venv
