@@ -15,7 +15,7 @@ Modern financial markets generate massive volumes of high-velocity, unstructured
 To explore how natural language processing can bridge this gap, this project implements a modular **Autonomous AI/NLP Financial Risk Engine & Decision Platform** prototype. The system ingests unstructured text feeds (NewsAPI, GDELT 2.0, or ad-hoc analyst submissions) and converts raw text into structured, machine-readable risk signals. The NLP pipeline pairs **ProsusAI/finbert** for financial sentiment polarity ($\text{Score} \in [-1.0, +1.0]$) with **facebook/bart-large-mnli** for zero-shot event classification across 10 financial categories. A transparent, rule-based **Impact Severity Formula** synthesizes sentiment magnitude, event category weights, whole-word urgency boosts, and classifier confidence into a calibrated severity score ($1\text{ to }10$).
 
 These structured risk signals feed into two illustrative downstream financial modules:
-- **Module A (Tactical Index Rebalancer):** Evaluates aggregated sentiment across holdings in a synthetic 15-stock S&P blue-chip equity basket and performs dynamic weight adjustments using a bounded-simplex projection algorithm (constraining individual weights to $2\%\text{--}20\%$ while strictly conserving a $1.0$ sum) with a configurable noise filter.
+- **Module A (Tactical Index Rebalancer):** Evaluates aggregated sentiment across holdings in a synthetic 15-stock S&P blue-chip equity basket and performs dynamic weight adjustments using a bounded-simplex projection algorithm (constraining individual weights to $2\% \text{ to } 20\%$ while strictly conserving a $1.0$ sum) with a configurable noise filter.
 - **Module B (Strategic Wholesale Banking Portfolio Stress Tester):** Enables automated scenario execution across a synthetic \$40.3M multi-asset wholesale banking portfolio (sovereign debt, corporate bonds, equities, commercial loans, and derivatives) when qualifying high-impact risk signals ($\ge 7/10$) are detected.
 
 > **Note on Prototype Scope:** This platform is an exploratory prototype designed to demonstrate an end-to-end risk intelligence pipeline. The scoring formulas, synthetic portfolio holdings, and stress shock factors are illustrative parametric heuristics and have not been historically calibrated or backtested on production tick or order-book data.
@@ -77,9 +77,7 @@ flowchart TB
         E3["Page 3: Wholesale Portfolio Stress Tester"]
     end
 
-    A1 --> B1
-    A2 --> B2
-    A3 --> B3
+    A1 & A2 & A3 --> B1 & B2 & B3
     B8 --> C1
     C3 --> D1
     C4 --> D3
@@ -99,12 +97,15 @@ flowchart TB
    - Returns the top-ranked category alongside its inference confidence score $\in [0.0, 1.0]$.
 
 3. **Multiplicative Impact Severity Formula:**
+
    $$\text{Raw Score} = 10 \cdot |\text{Sentiment}| \times W_{\text{event}} \times (1 + B_{\text{urgency}}) \times (0.5 + 0.5 \cdot \text{Confidence})$$
+
    $$\text{Impact Score} = \max\left(1, \; \min\left(10, \; \text{round}\left(\frac{\text{Raw Score}}{2.4}\right)\right)\right)$$
+
    Where:
    - $|\text{Sentiment}| \in [0.0, 1.0]$: Directional sentiment magnitude. Anchoring to magnitude prevents neutral market news from triggering false alarms.
-   - $W_{\text{event}} \in [0.8, 1.6]$: Domain category weight (`Credit Event`: 1.6, `Geopolitical`: 1.5, `Macroeconomic`: 1.4, `Market Volatility`: 1.3, `Regulatory`: 1.2, `Earnings Report`: 1.1, `Legal/Lawsuit`: 1.1, `Natural Disaster`: 1.1, `Merger/Acquisition`: 1.0, `Product Launch`: 0.8).
-   - $B_{\text{urgency}} = \min(0.1 \times N_{\text{unique\_keywords}}, \; 0.5)$: Lexical urgency boost. Evaluated via a precompiled regex matching whole words and common inflections (e.g., *crash/crashes/crashed*, *crisis/crises*, *sanction/sanctions*, *bankruptcy/bankruptcies*). This prevents false substring matches (such as `"war"` matching inside `"award"`).
+   - $W_{\text{event}} \in [0.8, 1.6]$: Domain category weight (`Credit Event`: 1.6, `Geopolitical`: 1.5, `Natural Disaster`: 1.5, `Macroeconomic`: 1.4, `Regulatory`: 1.3, `Market Volatility`: 1.3, `Merger/Acquisition`: 1.2, `Legal/Lawsuit`: 1.1, `Earnings Report`: 1.0, `Product Launch`: 0.8).
+   - $B_{\text{urgency}} = \min(0.1 \times N_{\text{keywords}}, \; 0.5)$: Lexical urgency boost. Evaluated via a precompiled regex matching whole words and common inflections (e.g., *crash/crashes/crashed*, *crisis/crises*, *sanction/sanctions*, *bankruptcy/bankruptcies*). This prevents false substring matches (such as `"war"` matching inside `"award"`).
    - $\text{Confidence} \in [0.0, 1.0]$: Scaled NLI classifier confidence in $[0.5, 1.0]$ to modulate signal reliability.
    - $2.4$: Theoretical maximum normalization denominator ($\text{Max Raw} = 10 \times 1.6 \times 1.5 \times 1.0 = 24.0$), mapping output onto the $1\text{ to }10$ integer scale.
 
@@ -223,9 +224,9 @@ python main.py
 ### Primary API Routes
 
 - `POST /api/analyze` & `POST /api/analyze/batch`: Analyze arbitrary text for sentiment, classification, and impact score.
-- `POST /api/ingest/news` & `POST /api/ingest/gdelt`: Fetch and process live feeds from external APIs.
-- `GET /api/signals`: Retrieve stored risk signals (supports `limit` parameter, bounded $1\text{--}500$).
-- `GET /api/signals/high-impact`: Retrieve signals filtered by threshold (bounded $1\text{--}10$).
+- `POST /api/ingest/news`, `POST /api/ingest/gdelt`, & `POST /api/ingest/tickers`: Fetch and process live feeds or specific ticker batches from external APIs.
+- `GET /api/signals`: Retrieve stored risk signals (supports `limit` parameter, bounded $1\text{ to }500$).
+- `GET /api/signals/high-impact`: Retrieve signals filtered by threshold (bounded $1\text{ to }10$).
 - `GET /api/signals/{ticker}`: Query historical signals for an individual stock ticker.
 - `GET /api/portfolio/weights` & `POST /api/portfolio/rebalance`: Inspect and execute bounded rebalancing for Module A.
 - `POST /api/stress-test/run` & `POST /api/stress-test/auto`: Run specific scenario shocks or trigger shocks automatically based on stored high-impact signals for Module B.
