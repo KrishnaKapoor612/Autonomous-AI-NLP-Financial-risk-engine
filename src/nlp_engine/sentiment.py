@@ -64,18 +64,41 @@ class SentimentAnalyzer:
         # Run inference
         results = self.pipe(text)
 
-        # results is a list of lists: [[{"label": "positive", "score": 0.95}, ...]]
-        scores_list = results[0] if results else []
+        # Transformers versions differ here: some return a flat list of score
+        # dictionaries for a single string; others wrap that list one level deep.
+        if isinstance(results, dict):
+            scores_list = [results]
+        elif results and isinstance(results[0], dict):
+            scores_list = results
+        elif results and isinstance(results[0], list):
+            scores_list = results[0]
+        else:
+            scores_list = []
+
+        scores_list = [
+            item for item in scores_list
+            if isinstance(item, dict)
+            and isinstance(item.get("label"), str)
+            and isinstance(item.get("score"), (int, float))
+        ]
+
+        if not scores_list:
+            return {
+                "sentiment_label": "neutral",
+                "sentiment_score": 0.0,
+                "confidence": 0.0,
+                "raw_scores": {"positive": 0.0, "negative": 0.0, "neutral": 1.0},
+            }
 
         # Build raw scores dict
         raw_scores = {}
         for item in scores_list:
-            raw_scores[item["label"]] = round(item["score"], 4)
+            raw_scores[item["label"].lower()] = round(float(item["score"]), 4)
 
         # Determine the top label
         top = max(scores_list, key=lambda x: x["score"])
-        label = top["label"]
-        confidence = round(top["score"], 4)
+        label = top["label"].lower()
+        confidence = round(float(top["score"]), 4)
 
         # Compute a continuous score from -1.0 to +1.0
         # Score = P(positive) - P(negative)

@@ -9,7 +9,7 @@ Purpose:
 Key Components:
   - API Credentials and environment variable loading (.env)
   - 15-stock S&P benchmark equity basket with baseline weights for Module A
-  - 5-asset $40.3M wholesale banking book and shock scenario definitions for Module B
+  - 10-holding $40.3M synthetic wholesale banking portfolio and shock scenarios
   - NLP model checkpoints (ProsusAI/finbert, facebook/bart-large-mnli)
   - Event taxonomies, urgency keyword dictionaries, and impact scoring weights
 """
@@ -110,7 +110,11 @@ URGENCY_KEYWORDS = [
 
 # ─── Rebalancer Settings (Module A) ─────────────────────────────────────────
 REBALANCE_ADJUSTMENT_FACTOR = 0.05   # How aggressively to adjust weights
-REBALANCE_SENTIMENT_THRESHOLD = 0.3  # Min |sentiment| to trigger adjustment
+REBALANCE_ADJUSTMENT_MIN = 0.01
+REBALANCE_ADJUSTMENT_MAX = 0.20
+REBALANCE_SENTIMENT_THRESHOLD = 0.05  # Keep API, dashboard, and CLI defaults aligned
+REBALANCE_SENTIMENT_THRESHOLD_MIN = 0.01
+REBALANCE_SENTIMENT_THRESHOLD_MAX = 0.50
 REBALANCE_MIN_WEIGHT = 0.02          # 2% minimum weight per stock
 REBALANCE_MAX_WEIGHT = 0.20          # 20% maximum weight per stock
 

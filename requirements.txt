@@ -1,6 +1,6 @@
 # Core NLP
 transformers>=4.40.0
-torch>=2.2.0
+torch>=2.5.0
 sentencepiece>=0.2.0
 
 # Data Ingestion

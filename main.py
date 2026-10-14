@@ -80,7 +80,7 @@ def run_cli_demo():
     
     # Module A: Tactical Rebalancing
     print("\n--- [Module A: S&P Benchmark Rebalancing] ---")
-    rebalance_res = rebalancer.rebalance(signals, adjustment_factor=0.05, sentiment_threshold=0.05)
+    rebalance_res = rebalancer.rebalance(signals)
     print(f"Status: {rebalance_res.get('message')}")
     if rebalance_res.get("changes"):
         for t, chg in sorted(rebalance_res["changes"].items(), key=lambda x: x[1]):

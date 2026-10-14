@@ -23,8 +23,33 @@ class ImpactScorer:
     def __init__(self):
         self.event_weights = EVENT_TYPE_WEIGHTS
         self.urgency_keywords = URGENCY_KEYWORDS
-        # Pre-compile regex for keyword matching
-        pattern = "|".join(re.escape(kw) for kw in self.urgency_keywords)
+        # Match complete words and common inflections (e.g., "sanctions",
+        # "bankruptcies"). This prevents "war" from matching inside "award".
+        inflections = {
+            "crash": ("crashes", "crashed", "crashing"),
+            "crisis": ("crises",),
+            "default": ("defaults", "defaulted", "defaulting"),
+            "bankruptcy": ("bankruptcies",),
+            "war": ("wars",),
+            "sanction": ("sanctions", "sanctioned", "sanctioning"),
+            "recession": ("recessions",),
+            "collapse": ("collapses", "collapsed", "collapsing"),
+            "fraud": ("frauds",),
+            "surge": ("surges", "surged", "surging"),
+            "plunge": ("plunges", "plunged", "plunging"),
+            "halt": ("halts", "halted", "halting"),
+            "emergency": ("emergencies",),
+            "shutdown": ("shutdowns",),
+            "spike": ("spikes", "spiked", "spiking"),
+            "record": ("records", "recorded", "recording"),
+        }
+        self._form_to_keyword = {}
+        forms = []
+        for keyword in self.urgency_keywords:
+            for form in (keyword, *inflections.get(keyword, ())):
+                self._form_to_keyword[form] = keyword
+                forms.append(re.escape(form))
+        pattern = r"(?<!\w)(?:" + "|".join(sorted(forms, key=len, reverse=True)) + r")(?!\w)"
         self._keyword_regex = re.compile(pattern, re.IGNORECASE)
 
     def score(
@@ -56,8 +81,10 @@ class ImpactScorer:
         event_weight = self.event_weights.get(event_classification, 1.0)
 
         # ── Component 3: Urgency keyword boost ──
-        matched_keywords = self._keyword_regex.findall(text.lower()) if text else []
-        unique_keywords = list(set(kw.lower() for kw in matched_keywords))
+        matched_forms = self._keyword_regex.findall(text) if text else []
+        unique_keywords = list(dict.fromkeys(
+            self._form_to_keyword[form.lower()] for form in matched_forms
+        ))
         # Each unique keyword adds 0.1, capped at 0.5 boost
         keyword_boost = min(len(unique_keywords) * 0.1, 0.5)
 

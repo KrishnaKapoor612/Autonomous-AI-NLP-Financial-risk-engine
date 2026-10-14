@@ -16,6 +16,14 @@ import requests
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from config.settings import (
+    REBALANCE_ADJUSTMENT_FACTOR,
+    REBALANCE_ADJUSTMENT_MIN,
+    REBALANCE_ADJUSTMENT_MAX,
+    REBALANCE_SENTIMENT_THRESHOLD,
+    REBALANCE_SENTIMENT_THRESHOLD_MIN,
+    REBALANCE_SENTIMENT_THRESHOLD_MAX,
+)
 
 st.set_page_config(page_title="Index Rebalancer", layout="wide")
 
@@ -93,18 +101,18 @@ col_ctrl1, col_ctrl2 = st.columns(2)
 with col_ctrl1:
     adj_factor = st.slider(
         "Adjustment Factor (Multiplier)",
-        min_value=0.01,
-        max_value=0.20,
-        value=0.05,
+        min_value=REBALANCE_ADJUSTMENT_MIN,
+        max_value=REBALANCE_ADJUSTMENT_MAX,
+        value=REBALANCE_ADJUSTMENT_FACTOR,
         step=0.01,
         help="Controls how aggressively portfolio weights shift in response to sentiment.",
     )
 with col_ctrl2:
     sentiment_thresh = st.slider(
         "Sentiment Threshold (Noise Filter)",
-        min_value=0.01,
-        max_value=0.50,
-        value=0.05,
+        min_value=REBALANCE_SENTIMENT_THRESHOLD_MIN,
+        max_value=REBALANCE_SENTIMENT_THRESHOLD_MAX,
+        value=REBALANCE_SENTIMENT_THRESHOLD,
         step=0.01,
         help="Minimum absolute net sentiment required to trigger a weight shift. Lower values allow smaller net sentiment (e.g., +0.05) to rebalance.",
     )

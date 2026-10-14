@@ -147,10 +147,20 @@ class NewsIngester:
 
         try:
             response = requests.get(f"{self.BASE_URL}/top-headlines", params=params, timeout=12)
+            data = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+            if response.status_code == 401:
+                msg = data.get("message", "API key invalid or unauthorized.")
+                raise NewsApiKeyMissingError(f"NewsAPI authentication failed: {msg}")
+            if response.status_code == 429:
+                msg = data.get("message", "Daily rate limit reached.")
+                raise NewsApiRateLimitError(f"NewsAPI rate limit: {msg}")
             response.raise_for_status()
-            data = response.json()
+            if data.get("status") != "ok":
+                raise NewsApiError(data.get("message", "Unknown NewsAPI error"))
             return self._format_articles(data.get("articles", []))
-        except Exception as e:
+        except NewsApiError:
+            raise
+        except requests.RequestException as e:
             raise NewsApiError(f"Failed to fetch headlines: {e}") from e
 
     def fetch_for_tickers(self, tickers: list[str], page_size: int = 3) -> list[dict]:

@@ -8,7 +8,7 @@ Run: uvicorn src.api.main:app --reload --port 8000
 Docs: http://localhost:8000/docs
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
 
@@ -50,7 +50,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -118,13 +118,23 @@ def analyze_batch(items: list[AnalyzeRequest]):
 
 
 @app.get("/api/signals", tags=["Risk Engine"])
-def get_signals(limit: int = 50):
+def get_signals(limit: int = Query(default=50, ge=1, le=500)):
     """Get all recent risk signals from history."""
     if not risk_engine:
         raise HTTPException(status_code=503, detail="Engine not loaded")
 
     signals = risk_engine.get_signals_history()
     return {"signals": signals[-limit:], "total": len(signals)}
+
+
+@app.get("/api/signals/high-impact", tags=["Risk Engine"])
+def get_high_impact_signals(threshold: int = Query(default=7, ge=1, le=10)):
+    """Get signals with impact score above threshold."""
+    if not risk_engine:
+        raise HTTPException(status_code=503, detail="Engine not loaded")
+
+    signals = risk_engine.get_high_impact_signals(threshold)
+    return {"threshold": threshold, "signals": signals, "count": len(signals)}
 
 
 @app.get("/api/signals/{ticker}", tags=["Risk Engine"])
@@ -135,16 +145,6 @@ def get_signals_by_ticker(ticker: str):
 
     signals = risk_engine.get_signals_by_ticker(ticker.upper())
     return {"ticker": ticker.upper(), "signals": signals, "count": len(signals)}
-
-
-@app.get("/api/signals/high-impact", tags=["Risk Engine"])
-def get_high_impact_signals(threshold: int = 7):
-    """Get signals with impact score above threshold."""
-    if not risk_engine:
-        raise HTTPException(status_code=503, detail="Engine not loaded")
-
-    signals = risk_engine.get_high_impact_signals(threshold)
-    return {"threshold": threshold, "signals": signals, "count": len(signals)}
 
 
 # ─── Data Ingestion Endpoints ───────────────────────────────────────────────

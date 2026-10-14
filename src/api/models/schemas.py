@@ -15,6 +15,12 @@ Role in Project:
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
+from config.settings import (
+    REBALANCE_ADJUSTMENT_MIN,
+    REBALANCE_ADJUSTMENT_MAX,
+    REBALANCE_SENTIMENT_THRESHOLD_MIN,
+    REBALANCE_SENTIMENT_THRESHOLD_MAX,
+)
 
 
 # ─── Request Models ─────────────────────────────────────────────────────────
@@ -44,7 +50,7 @@ class IngestRequest(BaseModel):
 
 class IngestTickersRequest(BaseModel):
     """Request body for ingesting news for multiple tickers."""
-    tickers: list[str] = Field(
+    tickers: list[str] | None = Field(
         default=None,
         description="List of tickers. If empty, uses all mock index tickers."
     )
@@ -54,10 +60,22 @@ class IngestTickersRequest(BaseModel):
 class RebalanceRequest(BaseModel):
     """Request body for /api/portfolio/rebalance."""
     adjustment_factor: Optional[float] = Field(
-        default=None, description="Override default adjustment factor"
+        default=None,
+        ge=REBALANCE_ADJUSTMENT_MIN,
+        le=REBALANCE_ADJUSTMENT_MAX,
+        description=(
+            "Override adjustment factor "
+            f"({REBALANCE_ADJUSTMENT_MIN}–{REBALANCE_ADJUSTMENT_MAX})"
+        ),
     )
     sentiment_threshold: Optional[float] = Field(
-        default=None, description="Minimum absolute sentiment to trigger adjustment"
+        default=None,
+        ge=REBALANCE_SENTIMENT_THRESHOLD_MIN,
+        le=REBALANCE_SENTIMENT_THRESHOLD_MAX,
+        description=(
+            "Minimum absolute sentiment to trigger adjustment "
+            f"({REBALANCE_SENTIMENT_THRESHOLD_MIN}–{REBALANCE_SENTIMENT_THRESHOLD_MAX})"
+        ),
     )
 
 

@@ -13,13 +13,18 @@ Logic:
 
 from datetime import datetime, timezone
 from copy import deepcopy
+import math
 
 import sys
 sys.path.insert(0, ".")
 from config.settings import (
     MOCK_INDEX_TICKERS,
     REBALANCE_ADJUSTMENT_FACTOR,
+    REBALANCE_ADJUSTMENT_MIN,
+    REBALANCE_ADJUSTMENT_MAX,
     REBALANCE_SENTIMENT_THRESHOLD,
+    REBALANCE_SENTIMENT_THRESHOLD_MIN,
+    REBALANCE_SENTIMENT_THRESHOLD_MAX,
     REBALANCE_MIN_WEIGHT,
     REBALANCE_MAX_WEIGHT,
     TICKER_TO_NAME,
@@ -61,13 +66,27 @@ class IndexRebalancer:
         """
         factor = adjustment_factor if adjustment_factor is not None else REBALANCE_ADJUSTMENT_FACTOR
         threshold = sentiment_threshold if sentiment_threshold is not None else REBALANCE_SENTIMENT_THRESHOLD
+        if not math.isfinite(factor) or not REBALANCE_ADJUSTMENT_MIN <= factor <= REBALANCE_ADJUSTMENT_MAX:
+            raise ValueError(
+                f"adjustment_factor must be between {REBALANCE_ADJUSTMENT_MIN} and {REBALANCE_ADJUSTMENT_MAX}."
+            )
+        if not math.isfinite(threshold) or not REBALANCE_SENTIMENT_THRESHOLD_MIN <= threshold <= REBALANCE_SENTIMENT_THRESHOLD_MAX:
+            raise ValueError(
+                "sentiment_threshold must be between "
+                f"{REBALANCE_SENTIMENT_THRESHOLD_MIN} and {REBALANCE_SENTIMENT_THRESHOLD_MAX}."
+            )
         previous_weights = deepcopy(self.weights)
 
         # Aggregate sentiment per ticker
         ticker_sentiments: dict[str, list[float]] = {}
         for signal in signals:
             ticker = signal.get("ticker")
-            sentiment = signal.get("sentiment_score", 0)
+            try:
+                sentiment = float(signal.get("sentiment_score", 0))
+            except (TypeError, ValueError) as exc:
+                raise ValueError("Each sentiment_score must be a finite number from -1 to 1.") from exc
+            if not math.isfinite(sentiment) or not -1 <= sentiment <= 1:
+                raise ValueError("Each sentiment_score must be a finite number from -1 to 1.")
             if ticker and ticker in self.weights:
                 if ticker not in ticker_sentiments:
                     ticker_sentiments[ticker] = []
@@ -88,18 +107,9 @@ class IndexRebalancer:
                 self.weights[ticker] += adjustment
                 tickers_adjusted.append(ticker)
 
-        # Apply min/max constraints
-        for ticker in self.weights:
-            self.weights[ticker] = max(
-                REBALANCE_MIN_WEIGHT,
-                min(REBALANCE_MAX_WEIGHT, self.weights[ticker])
-            )
-
-        # Normalize weights to sum to 1.0
-        total = sum(self.weights.values())
-        if total > 0:
-            for ticker in self.weights:
-                self.weights[ticker] = round(self.weights[ticker] / total, 6)
+        # Project onto the bounded simplex. Clamping and then normalizing can
+        # violate the bounds, so solve for a shared shift before rounding.
+        self.weights = self._project_bounded_simplex(self.weights)
 
         # Calculate changes
         changes = {}
@@ -134,6 +144,52 @@ class IndexRebalancer:
         self.rebalance_history.append(record)
 
         return record
+
+    @staticmethod
+    def _project_bounded_simplex(weights: dict[str, float]) -> dict[str, float]:
+        """Return weights within configured bounds that sum exactly to 1.0."""
+        tickers = list(weights)
+        minimum = REBALANCE_MIN_WEIGHT
+        maximum = REBALANCE_MAX_WEIGHT
+        if not tickers or len(tickers) * minimum > 1 or len(tickers) * maximum < 1:
+            raise ValueError("Portfolio size and weight bounds cannot sum to 1.0.")
+
+        raw = [float(weights[ticker]) for ticker in tickers]
+        low = min(value - maximum for value in raw)
+        high = max(value - minimum for value in raw)
+        for _ in range(80):
+            shift = (low + high) / 2
+            projected_sum = sum(
+                min(maximum, max(minimum, value - shift)) for value in raw
+            )
+            if projected_sum > 1.0:
+                low = shift
+            else:
+                high = shift
+
+        rounded = {
+            ticker: round(min(maximum, max(minimum, value - high)), 6)
+            for ticker, value in zip(tickers, raw)
+        }
+
+        # Distribute the rounding remainder in 1e-6 units without crossing a
+        # bound, so public weights conserve the portfolio exactly.
+        remainder = round((1.0 - sum(rounded.values())) * 1_000_000)
+        for ticker in tickers:
+            if remainder == 0:
+                break
+            if remainder > 0:
+                capacity = round((maximum - rounded[ticker]) * 1_000_000)
+                adjustment = min(remainder, capacity)
+            else:
+                capacity = round((rounded[ticker] - minimum) * 1_000_000)
+                adjustment = -min(-remainder, capacity)
+            rounded[ticker] = round(rounded[ticker] + adjustment / 1_000_000, 6)
+            remainder -= adjustment
+
+        if remainder != 0:
+            raise ArithmeticError("Could not reconcile rounded portfolio weights to 1.0.")
+        return rounded
 
     def reset_weights(self):
         """Reset weights to initial values."""
