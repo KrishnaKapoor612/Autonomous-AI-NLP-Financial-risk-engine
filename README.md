@@ -15,8 +15,8 @@ Modern financial markets generate massive volumes of high-velocity, unstructured
 To explore how natural language processing can bridge this gap, this project implements a modular **Autonomous AI/NLP Financial Risk Engine & Decision Platform** prototype. The system ingests unstructured text feeds (NewsAPI, GDELT 2.0, or ad-hoc analyst submissions) and converts raw text into structured, machine-readable risk signals. The NLP pipeline pairs **ProsusAI/finbert** for financial sentiment polarity ($\text{Score} \in [-1.0, +1.0]$) with **facebook/bart-large-mnli** for zero-shot event classification across 10 financial categories. A transparent, rule-based **Impact Severity Formula** synthesizes sentiment magnitude, event category weights, whole-word urgency boosts, and classifier confidence into a calibrated severity score ($1\text{ to }10$).
 
 These structured risk signals feed into two illustrative downstream financial modules:
-- **Module A (Tactical Index Rebalancer):** Evaluates aggregated sentiment across holdings in a synthetic 15-stock S&P blue-chip equity basket and performs dynamic weight adjustments using a bounded-simplex projection algorithm (constraining individual weights to $2\% \text{ to } 20\%$ while strictly conserving a $1.0$ sum) with a configurable noise filter.
-- **Module B (Strategic Wholesale Banking Portfolio Stress Tester):** Enables automated scenario execution across a synthetic \$40.3M multi-asset wholesale banking portfolio (sovereign debt, corporate bonds, equities, commercial loans, and derivatives) when qualifying high-impact risk signals ($\ge 7/10$) are detected.
+- **Module A (Tactical Index Rebalancer):** Evaluates aggregated sentiment across holdings in a synthetic 15-stock S&P blue-chip equity basket and performs dynamic weight adjustments using a bounded-simplex projection algorithm (constraining individual weights to 2% to 20% while strictly conserving a 1.0 sum) with a configurable noise filter.
+- **Module B (Strategic Wholesale Banking Portfolio Stress Tester):** Enables automated scenario execution across a synthetic USD 40.3M multi-asset wholesale banking portfolio (sovereign debt, corporate bonds, equities, commercial loans, and derivatives) when qualifying high-impact risk signals (Impact Score ≥ 7/10) are detected.
 
 > **Note on Prototype Scope:** This platform is an exploratory prototype designed to demonstrate an end-to-end risk intelligence pipeline. The scoring formulas, synthetic portfolio holdings, and stress shock factors are illustrative parametric heuristics and have not been historically calibrated or backtested on production tick or order-book data.
 
@@ -111,8 +111,8 @@ flowchart TB
 
 4. **Bounded Simplex Portfolio Projection (Module A):**
    - Clamping adjusted weights and re-normalizing by dividing by their sum can mathematically violate box bounds. 
-   - To guarantee that every holding $w_i \in [w_{\min}, w_{\max}] = [0.02, 0.20]$ while strictly maintaining $\sum_{i=1}^n w_i = 1.0$, Module A implements a bisection search over a uniform shift parameter $\lambda$:
-     $$w_i(\lambda) = \min\left(w_{\max}, \; \max\left(w_{\min}, \; \tilde{w}_i - \lambda\right)\right) \quad \text{such that} \quad \sum_{i=1}^n w_i(\lambda) = 1.0$$
+   - To guarantee that every holding $w_i \in [w_{\min}, w_{\max}] = [0.02, 0.20]$ while strictly maintaining $\sum_{i=1}^n w_i = 1.0$, Module A computes a bisection shift parameter $\lambda$ such that:
+     $w_i(\lambda) = \min(w_{\max}, \; \max(w_{\min}, \; \tilde{w}_i - \lambda))$ with $\sum_{i=1}^n w_i(\lambda) = 1.0$.
    - A final deterministic residual reconciliation step distributes any $10^{-6}$ rounding remainder without crossing box constraints.
 
 ### Key Frameworks & Libraries
@@ -142,12 +142,12 @@ flowchart TB
    - Starting weights are synthetically configured in `data/portfolio/mock_index.json` and sum strictly to 1.0.
 
 3. **Synthetic Wholesale Banking Portfolio (Module B):**
-   - A \$40,300,000 multi-asset balance sheet spanning 10 synthetic holdings across 5 asset classes (`data/portfolio/synthetic_portfolio.json`):
-     - **Government Bonds:** US Treasury 10Y Bond (\$10.0M, AAA, Duration ~7 yrs)
-     - **Corporate Bonds:** TechCorp Senior Bond (\$5.0M, A), EnergyCo Bond (\$4.0M, BBB)
-     - **Equities:** AAPL Holding (\$3.0M), JPM Holding (\$2.5M), XOM Holding (\$2.0M)
-     - **Commercial Loans:** RetailCo Term Loan (\$8.0M, BBB), MfgCorp Revolver (\$5.0M, BB)
-     - **Derivatives:** Interest Rate Swap (\$500k MTM), Credit Default Swap (\$300k MTM)
+   - A USD 40,300,000 multi-asset balance sheet spanning 10 synthetic holdings across 5 asset classes (`data/portfolio/synthetic_portfolio.json`):
+     - **Government Bonds:** US Treasury 10Y Bond (USD 10.0M, AAA, Duration ~7 yrs)
+     - **Corporate Bonds:** TechCorp Senior Bond (USD 5.0M, A), EnergyCo Bond (USD 4.0M, BBB)
+     - **Equities:** AAPL Holding (USD 3.0M), JPM Holding (USD 2.5M), XOM Holding (USD 2.0M)
+     - **Commercial Loans:** RetailCo Term Loan (USD 8.0M, BBB), MfgCorp Revolver (USD 5.0M, BB)
+     - **Derivatives:** Interest Rate Swap (USD 500k MTM), Credit Default Swap (USD 300k MTM)
 
 ### Scope & Assumptions
 
@@ -192,7 +192,7 @@ python main.py
   ```bash
   python main.py
   ```
-  *Executes the complete pipeline: model initialization $\rightarrow$ sample feed ingestion $\rightarrow$ NLP signal generation $\rightarrow$ Module A bounded rebalancing $\rightarrow$ Module B portfolio stress test.*
+  *Executes the complete pipeline: model initialization → sample feed ingestion → NLP signal generation → Module A bounded rebalancing → Module B portfolio stress test.*
 
 - **Launch Interactive Streamlit Multi-Page Dashboard**:
   ```bash
@@ -238,15 +238,15 @@ python main.py
 ### What the Prototype Demonstrates
 
 1. **Sub-Second Unstructured Text Triage:**
-   - Ingests unstructured financial text and converts it into structured, auditable risk-signal records containing continuous sentiment, event classifications, urgency factors, and a bounded impact severity score ($1\text{ to }10$).
+   - Ingests unstructured financial text and converts it into structured, auditable risk-signal records containing continuous sentiment, event classifications, urgency factors, and a bounded impact severity score (1 to 10).
    - Exposes all intermediate scoring components so that every score is interpretable and verifiable by risk analysts.
 
 2. **Noise-Protected Tactical Rebalancing (Module A):**
-   - Aggregates ticker-level sentiment across multiple signals and applies adjustments only when the absolute net sentiment exceeds the configured threshold ($0.01\text{ to }0.50$, default $0.05$), filtering out market noise.
-   - Applies bounded simplex projection to mathematically ensure that individual asset weights never breach the $2\%$ minimum or $20\%$ maximum concentration constraints, while preserving a portfolio sum of exactly $100\%$.
+   - Aggregates ticker-level sentiment across multiple signals and applies adjustments only when the absolute net sentiment exceeds the configured threshold (0.01 to 0.50, default 0.05), filtering out market noise.
+   - Applies bounded simplex projection to mathematically ensure that individual asset weights never breach the 2% minimum or 20% maximum concentration constraints, while preserving a portfolio sum of exactly 100%.
 
 3. **Event-Driven Portfolio Stress Testing (Module B):**
-   - Automatically detects qualifying high-impact events ($\text{Impact Score} \ge 7$) and triggers multi-asset stress testing across 6 discrete macroeconomic, geopolitical, credit, and regulatory crisis scenarios.
+   - Automatically detects qualifying high-impact events (Impact Score ≥ 7) and triggers multi-asset stress testing across 6 discrete macroeconomic, geopolitical, credit, and regulatory crisis scenarios.
    - Provides clear before-and-after portfolio balance sheet loss breakdowns across fixed income, equity, loan, and derivative holdings.
 
 ### Domain Relevance & Business Impact for Financial Institutions
