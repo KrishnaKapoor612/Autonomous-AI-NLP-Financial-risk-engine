@@ -3,7 +3,7 @@
 **Candidate Name:** Krishna Kapoor
 **College Email ID:**  kkapoor2_be24@thapar.edu
 **College / Campus:** Thapar Institute of Engineering and Technology 
-**Demo Video Link:** [\[YouTube / Unlisted\]  ](https://youtu.be/9eZeS-aQFG4)
+**Demo Video Link:** [\[YouTube / Unlisted\]  ](https://youtu.be/9eZeS-aQFG4) [please use captions and headset for sound quality]
 **Slide Deck Link (within the repo in docs folder):**  [Presentation Slide Deck (docs/presentation.pdf)](docs/presentation.pdf)
 
 ---
